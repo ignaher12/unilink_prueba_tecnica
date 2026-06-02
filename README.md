@@ -1,32 +1,35 @@
-# Asistente de soporte que consume documentación privada
+# Asistente de soporte con documentación privada
 ## Arquitectura
-                                                                                        
-                           ┌─────────┐                                  
-                           │ chromaDB│                                  
-                           └──▲───┬──┘                                  
-                    pregunta  │   │devuelve top_k                       
-                    vectorizada   │vectores cercanos                    
-  ┌──────────┐             ┌──┼───▼──┐                                  
-  │          │ search      │         │    ┌──────────┐                  
-  │          │(pregunta)   │         │docs│          │                  
-  │ Webhook  ┼────────────►│ Python  ┼────► code node│                  
-  │          │             │   API   │    │          │                  
-  │          │             │         │    └────┬─────┘                  
-  └──────────┘             └─────────┘         │system_prompt           
-                                               │query                   
-                                               │docs                    
-                                               │                        
-                                               │       system_prompt    
-                                          ┌────┴──────┐query  ┌────┐    
-                                          │if len(docs)──────►│    │    
-                                          │   > 0     │docs   │LLM │    
-                                          └───┬───────┘       └─┬──┘    
-                                              │                 │       
-                                              │else             ▼       
-                                              ▼             respuesta   
-                                          respuesta                     
-                                                                        
 
+```
+                                                                                        
+                         ┌─────────┐                               
+                         │ chromaDB│                               
+                         └──▲───┬──┘                               
+                  pregunta  │   │devuelve top_k                    
+                  vectorizada   │vectores cercanos                 
+┌──────────┐             ┌──┼───▼──┐                               
+│          │ search      │         │    ┌──────────┐               
+│          │(pregunta)   │         │docs│          │               
+│ Webhook  ┼────────────►│ Python  ┼────► code node│               
+│          │             │   API   │    │          │               
+│          │             │         │    └────┬─────┘               
+└──────────┘             └─────────┘         │system_prompt        
+                                             │query                
+                                             │docs                 
+                                             │                     
+                                             │       system_prompt 
+                                        ┌────┴──────┐query  ┌────┐ 
+                                        │if len(docs)──────►│    │ 
+                                        │   > 0     │docs   │LLM │ 
+                                        └───┬───────┘       └─┬──┘ 
+                                            │                 │    
+                                            │else             ▼    
+                                            ▼             respuesta
+                                        respuesta                                 
+
+
+```
 ## Stack
 Python/FastAPI, ChromaDB, sentence-transformers (e5-base), n8n, GLM-5.1 provisto por NVIDIA build
 
@@ -41,8 +44,7 @@ Docker + Docker Compose + API key de NVIDIA BUILD
 5. abrir :5678, loggearse en n8n, importar workflow.json (n8n/workflow.json) y activarlo (boton arriba a la derecha)
 
 ## Uso
-1. Cargue archivos masivamente y me dio error. 
-   Hay documentación explicita para este error.
+1. Ejemplo de una consulta con documentación explicita asociada.
 ```powershell
 $body = '{"pregunta":"Cargue archivos masivamente y me dio error"}'
 Invoke-RestMethod -Uri "http://localhost:5678/webhook/pregunta" -Method Post -ContentType "application/json; charset=utf-8" -Body $body | ConvertTo-Json -Depth 10
@@ -55,8 +57,7 @@ RESPONSE
 "fuentes":  ["Documentación 2.txt", "Documentación 1.pdf"]
 }       
 ``` 
-2. El sistema devuelve error 502, ¿qué significa?:
-   En la documentación no hay nada que describa un error 502.
+2. Ejemplo de una consulta sin documentación asociada.
    
 ```powershell
 $body = '{"pregunta":"El sistema devuelve error 502, ¿qué significa?"}'
@@ -70,8 +71,7 @@ RESPONSE
     "fuentes":  ["Documentación 3.md", "Documentación 2.txt"]
 }       
 ```        
-3. Olvide mis credenciales de inicio
-   Hay información sobre errores con credenciales de inicio.
+1. Ejemplo de una consulta con documentación asociada (retrieval recupera doc de credenciales pero LLM no extrapola credenciales incorrectas con credenciales olvidadas).
 ```powershell
 
 $body = '{"pregunta":"Olvide mis credenciales de inicio"}'
