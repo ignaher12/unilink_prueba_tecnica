@@ -5,7 +5,7 @@ from app.embeddings import embed_query, embed_text
 
 CHROMA_DIR = Path(__file__).resolve().parent.parent / "chroma_db"
 COLLECTION_NAME = 'minecatalog'
-SCORE_MIN = 0.7 # umbral para considerar si una informacion esta o no en los embeddings
+SCORE_MIN = 0.78 # umbral para considerar si una informacion esta o no en los embeddings
 
 _client = None
 
@@ -56,10 +56,11 @@ def search(query, top_k=3):
 if __name__ == "__main__":
     from app.loader import load_general
     from app.chunker import chunk_docs
-    chunks = chunk_docs(load_general())
-    index(chunks)
-    print("indexados:", get_collection().count())
+    # chunks = chunk_docs(load_general())
+    # index(chunks)
+    # print("indexados:", get_collection().count())
     
-    for r in search("no puedo iniciar sesion", top_k=10):
+    for r in search("No me funciona mis credenciales", top_k=3):
         print(round(r["score"], 3), "|", r["archivo_origen"], "|", r["id"])
         print("  ", r["texto"][:80].replace("\n", " "))
+    print("\n - - - - - - - -  -- - - - --  - - No me funciona mis credenciales \n")

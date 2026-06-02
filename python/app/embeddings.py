@@ -1,6 +1,6 @@
 from sentence_transformers import SentenceTransformer
 
-MODEL_NAME = "intfloat/multilingual-e5-small"
+MODEL_NAME = "intfloat/multilingual-e5-base"
 _model = None
 
 def get_model():
