@@ -1,6 +1,6 @@
 from sentence_transformers import SentenceTransformer
 
-MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
+MODEL_NAME = "intfloat/multilingual-e5-small"
 _model = None
 
 def get_model():
@@ -11,7 +11,13 @@ def get_model():
 
 def embed_text(textos):
     model = get_model()
-    return model.encode(textos, normalize_embeddings=True, show_progress_bar=True).tolist()
+    i_textos = [f"passage: {texto}" for texto in textos]
+    return model.encode(i_textos, normalize_embeddings=True).tolist()
+
+def embed_query(query):
+    model = get_model()
+    i_query = f"query: {query}"
+    return model.encode([i_query], normalize_embeddings=True)[0].tolist()
 
 if __name__ == "__main__":
     vecs = embed_text(["hola mundo", "error de base de datos"])

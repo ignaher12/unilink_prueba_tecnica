@@ -19,8 +19,9 @@ def chunk_text(texto):
             unidades.extend(p for p in s.split('\n\n') if p.strip())  # cae al separador chico
         else:
             unidades.append(s)                                         # queda entera
-        chunks = []
-        actual = ''
+    
+    chunks = []
+    actual = ''
         
     for p in unidades:
         if actual and len(actual) + len(p) > CHUNK_SIZE:
@@ -46,7 +47,7 @@ def chunk_docs(docs):
 
 
 if __name__ == "__main__":
-    from loader import load_general
+    from app.loader import load_general
     docs = load_general()
     chunks = chunk_docs(docs)
     print("num chunks: ", len(chunks))
@@ -56,6 +57,6 @@ if __name__ == "__main__":
       palabras = c["texto"].split()
     #   if c["id"] == "Documentación 1.pdf#4":
     #       print(palabras)    
-      inicio = " ".join(palabras[:5])      # primeras 5
-      fin = " ".join(palabras[-5:])        # últimas 5
+      inicio = " ".join(palabras[:5])  
+      fin = " ".join(palabras[-5:])  
       print(f"{c['id']}: {inicio} ... {fin}")
