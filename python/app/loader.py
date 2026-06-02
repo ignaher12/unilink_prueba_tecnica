@@ -75,11 +75,3 @@ def load_general():
                 docs.append({"texto": p.get("texto"), "archivo_origen": origen, "id": p.get("id")})
                 
     return docs
-
-
-load_general()
-# print(load_pdf(r'python\docs\Documentación 1.pdf'))
-# print(clean_txt(load_pdf(r'python\docs\Documentación 1.pdf')))
-
-
-
