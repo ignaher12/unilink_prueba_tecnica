@@ -22,4 +22,4 @@ def embed_query(query):
 if __name__ == "__main__":
     vecs = embed_text(["hola mundo", "error de base de datos"])
     print(len(vecs), "vectores")
-    print("dimensión:", len(vecs[0]))   # debería dar 384 con este modelo
+    print("dimensión:", len(vecs[0])) 

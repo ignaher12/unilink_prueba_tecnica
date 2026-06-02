@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from app.loader import load_general
@@ -24,5 +24,7 @@ def ingest():
 
 @app.post('/search')
 def search_endp(req: SearchRequest):
+    if not req.query.strip():
+        raise HTTPException(400, detail="La consulta no puede estar vacía")
     results = search(req.query, req.top_k)
     return {"query": req.query, "resultados": results}

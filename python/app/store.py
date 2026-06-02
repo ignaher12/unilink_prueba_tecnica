@@ -21,7 +21,7 @@ def get_collection():
 def index(chunks):
     try:
         get_client().delete_collection(name=COLLECTION_NAME)
-    except Exception as e:
+    except Exception:
         pass
     
     collection = get_collection()
@@ -56,11 +56,10 @@ def search(query, top_k=3):
 if __name__ == "__main__":
     from app.loader import load_general
     from app.chunker import chunk_docs
-    # chunks = chunk_docs(load_general())
-    # index(chunks)
-    # print("indexados:", get_collection().count())
+    chunks = chunk_docs(load_general())
+    index(chunks)
+    print("indexados:", get_collection().count())
     
     for r in search("No me funciona mis credenciales", top_k=3):
         print(round(r["score"], 3), "|", r["archivo_origen"], "|", r["id"])
         print("  ", r["texto"][:80].replace("\n", " "))
-    print("\n - - - - - - - -  -- - - - --  - - No me funciona mis credenciales \n")

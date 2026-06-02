@@ -1,0 +1,266 @@
+{
+  "name": "RAG MineCatalog",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pregunta",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -736,
+        144
+      ],
+      "id": "f2b38010-d581-4d5c-93fc-9c47a74aaf5a",
+      "name": "Webhook",
+      "webhookId": "ccce68ff-ad28-423b-a533-63e0c4a601d0"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://python-api:8000/search",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.body.pregunta }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -528,
+        144
+      ],
+      "id": "79c4fa06-2320-4945-a747-fc84ce4416e2",
+      "name": "HTTP Request",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { respuesta: $json.respuesta, fuentes: $json.archivos_citados } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        272,
+        272
+      ],
+      "id": "0d440a17-f60b-43b5-b902-3087c0561dae",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7abdddcf-ae17-4a24-ae79-a274537ae01a",
+              "leftValue": "={{ $json.archivos_citados }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -128,
+        224
+      ],
+      "id": "d9e4c08f-ef8c-4f88-abf5-a00fe113fe68",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { respuesta: $json.choices[0].message.content, fuentes: $('If').item.json.archivos_citados } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        352,
+        0
+      ],
+      "id": "d7534602-8aea-47e5-9421-5ac404c0042d",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const resultados = $input.first().json.resultados;\n  let user_prompt = '';\n  const archivos_citados = new Set();\n  if (resultados.length === 0) {\n    return [{ json: {\n      respuesta: \"No se encuentra esa información en la documentación disponible.\",\n      archivos_citados: [],\n    }}];\n  } else {\n    const system_prompt = `A continuacion se te proveera contexto de documentacion interna y una pregunta.\n    - Tenes que responder solo con la informacion que se te provee.\n    - Si la informacion no responde la pregunta, indica explicitamente que no tenes la informacion suficiente para responderlo. No inventes ni agregues datos extra.\n    - Cita el documento de donde sacas la informacion.`;\n    for (const r of resultados) {\n      user_prompt += `Fuente: ${r.archivo_origen} \\n`;\n      user_prompt += r.texto;\n      user_prompt += ' \\n - - - - - - - - - \\n';\n      archivos_citados.add(r.archivo_origen);\n    }\n    user_prompt += `\\n PREGUNTA DEL USUARIO: ${$input.first().json.query}`;\n    return [{ json: {\n      system_prompt: system_prompt,\n      user_prompt: user_prompt,\n      archivos_citados: [...archivos_citados]\n    }}];\n  }"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        224
+      ],
+      "id": "26dc9b42-13fd-47f5-a7c2-ade71c15b4cc",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://integrate.api.nvidia.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.NVIDIA_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: \"z-ai/glm-5.1\", messages: [ { role: \"system\", content: $json.system_prompt }, { role: \"user\", content: $json.user_prompt } ] } }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "60f9b97e-b7c8-4526-b4a3-4114ae517608",
+      "name": "HTTP Request1",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { respuesta: \"El servicio no está disponible en este momento, intentá más tarde.\", fuentes: [] } }}",
+        "options": {
+          "responseCode": 503
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        208,
+        -192
+      ],
+      "id": "fe80a679-fab0-4e7c-9b46-524afefba831",
+      "name": "Respond to Webhook2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a6e570d0-fab3-434a-b4cd-a8bf8782539b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f9804a88e90e8407d298d13839a7569e97bd73dff66a252ac8eb2c8948e477b2"
+  },
+  "id": "RmBd4yjl1MygYYQC",
+  "tags": []
+}

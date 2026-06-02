@@ -1,6 +1,4 @@
 import re
-### Si modificamos el CHUNK_SIZE, es probable que los chunks generados cambien. 
-# En ese caso hay que limpiar la base de datos porque los vectores pueden quedar huerfanos.
 
 CHUNK_SIZE = 700
 CHUNK_OVERLAP = 1
@@ -55,8 +53,7 @@ if __name__ == "__main__":
     for c in chunks:
       print(len(c["texto"]), '- - -  ', c["id"])
       palabras = c["texto"].split()
-    #   if c["id"] == "Documentación 1.pdf#4":
-    #       print(palabras)    
+
       inicio = " ".join(palabras[:5])  
       fin = " ".join(palabras[-5:])  
       print(f"{c['id']}: {inicio} ... {fin}")
